@@ -1,0 +1,44 @@
+---
+title: "HW6-ARIMA"
+output: html_document
+date: "2023-11-22"
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+library(readxl)
+
+setwd("C:/Users/guiji/OneDrive/2023 fall msca/BF/TS ACF&models/HW4")
+Exports_China <- read_excel("EPV_ts China.xlsx")
+View(Exports_China)
+```
+
+```{r}
+EPV_ts<-ts(Exports_China$`Value in billion dollars`,frequency = 12,start = c(2018,9),end = c(2023,8))
+plot(EPV_ts)
+#The series is not stationary
+```
+
+```{r}
+# NSDIFFS only works for seasonal data
+nsdiffs(EPV_ts)
+# However NDIFFS works with non-seasonal data
+ndiffs(EPV_ts)
+```
+
+```{r}
+auto_fit <- auto.arima(EPV_ts,stepwise=FALSE, approximation=FALSE,trace=TRUE)
+auto_fit
+#The best model for the series is ARIMA(0,1,2)(1,0,0). The ARIMA(p, d, q) model implies that the time series has been differenced 1 times, and each observed value in the sequence is represented as a linear combination of the past 0 observed values and 2 residual terms. 
+```
+
+```{r}
+forecast(auto_fit,h=5,level=c(99.5))#forecast for the next 5 months using ARIMA with the confidence level at 99.5%
+plot(forecast(auto_fit,h=5,level=c(99.5)))
+plot(auto_fit$residuals)
+Acf(auto_fit$residual)#All the spikes are within the two signicance lines.
+hist(auto_fit$residuals)#a normal distirbution would be the most ideal. But here it skews to the left.
+accuracy(auto_fit)#MASE is at 53.7%
+```
